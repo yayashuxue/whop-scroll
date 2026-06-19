@@ -42,8 +42,17 @@ export function getWallet() {
   return wallet;
 }
 
+// User-promoted ads added via /studio. Newest first so the creator sees their
+// own promoted card immediately at the top of the feed.
+let userPromoted: FeedItem[] = [];
+
 export function getFeed(): FeedItem[] {
-  return SEED_FEED;
+  return [...userPromoted, ...SEED_FEED];
+}
+
+export function addPromotion(item: FeedItem) {
+  userPromoted = [item, ...userPromoted].slice(0, 12);
+  return item;
 }
 
 async function safeWhop<T>(path: string, method: string, body?: unknown) {
@@ -84,7 +93,7 @@ export type FeedAction = {
 };
 
 export async function executeFeedAction(input: FeedAction): Promise<WalletState> {
-  const item = SEED_FEED.find((i) => i.id === input.itemId);
+  const item = getFeed().find((i) => i.id === input.itemId);
   if (!item) return wallet;
 
   const amountUsd = Number(input.cta.amountUsd ?? 0);
