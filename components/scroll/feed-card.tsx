@@ -55,7 +55,7 @@ export function FeedCard({
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-black/5 to-black/90" />
 
       <div className="fade-rise absolute inset-x-0 bottom-0 flex items-end gap-3 p-5 pb-10">
-        <div className="flex-1 space-y-3 text-white">
+        <div className="min-w-0 flex-1 space-y-3 text-white">
           <InCardOverlay kind={item.kind} />
 
           <div className="flex items-center gap-2">

@@ -19,6 +19,7 @@ export function StudioClient({
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const [connected, setConnected] = useState(false);
   const [campaignId, setCampaignId] = useState(campaigns[0]?.id ?? "");
   const [templateId, setTemplateId] = useState(templates[0]?.id ?? "");
   const [title, setTitle] = useState("");
@@ -103,20 +104,36 @@ export function StudioClient({
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="mx-auto max-w-2xl px-5 py-6">
-        <header className="flex items-center justify-between pb-6">
-          <div>
+      <div className="mx-auto max-w-2xl px-5 pb-32 pt-6">
+        <header className="flex items-start justify-between gap-3 pb-6">
+          <div className="min-w-0">
             <div className="text-[10px] uppercase tracking-[0.18em] text-white/40">
               whop scroll · studio
             </div>
-            <h1 className="text-2xl font-bold">Promote a campaign</h1>
+            <h1 className="truncate text-2xl font-bold">Promote a campaign</h1>
           </div>
-          <Link
-            href="/"
-            className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[12px] text-white/80 hover:bg-white/10"
-          >
-            ← Feed
-          </Link>
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setConnected(true);
+                toast.success("Connected · loaded 3 campaigns");
+              }}
+              className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition ${
+                connected
+                  ? "border border-[#c1fa81]/40 bg-[#c1fa81]/15 text-[#c1fa81]"
+                  : "bg-white text-black hover:bg-white/85"
+              }`}
+            >
+              {connected ? "✓ @prophub" : "Continue with Whop"}
+            </button>
+            <Link
+              href="/"
+              className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[12px] text-white/80 hover:bg-white/10"
+            >
+              ← Feed
+            </Link>
+          </div>
         </header>
 
         <section className="space-y-2 pb-6">
@@ -283,7 +300,7 @@ export function StudioClient({
           </div>
         </section>
 
-        <div className="sticky bottom-4 z-20 flex items-center gap-2 rounded-2xl border border-white/10 bg-black/80 p-3 backdrop-blur">
+        <div className="sticky bottom-3 z-20 flex items-center gap-2 rounded-2xl border border-white/10 bg-black/85 p-2.5 backdrop-blur">
           <PreviewBadge
             posterUrl={
               videoDataUrl ? "" : selectedTemplate?.posterUrl ?? ""
