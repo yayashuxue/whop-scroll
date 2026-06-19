@@ -1,62 +1,73 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import type { MyCampaign, PosterTemplate } from "@/lib/studio-templates";
 
-type CtaKind = "subscribe" | "tip";
+type CtaInput = { label: string; url: string };
 
-export function StudioClient({
-  campaigns,
-  templates,
-}: {
-  campaigns: MyCampaign[];
-  templates: PosterTemplate[];
-}) {
+function isWhopUrl(raw: string): boolean {
+  if (!raw) return false;
+  try {
+    const u = new URL(raw);
+    return (
+      (u.protocol === "https:" || u.protocol === "http:") &&
+      /(^|\.)whop\.com$/.test(u.hostname)
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function StudioClient() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [connected, setConnected] = useState(false);
-  const [campaignId, setCampaignId] = useState(campaigns[0]?.id ?? "");
-  const [templateId, setTemplateId] = useState(templates[0]?.id ?? "");
+  const [whopHandle, setWhopHandle] = useState<string | null>(null);
+  const [whopName, setWhopName] = useState<string | null>(null);
+
   const [title, setTitle] = useState("");
   const [pitch, setPitch] = useState("");
-  const [creator, setCreator] = useState("");
-  const [handle, setHandle] = useState("@");
-  const [ctaKind, setCtaKind] = useState<CtaKind>("subscribe");
-  const [ctaAmount, setCtaAmount] = useState(29);
+  const [primary, setPrimary] = useState<CtaInput>({ label: "", url: "" });
+  const [secondary, setSecondary] = useState<CtaInput>({ label: "", url: "" });
+  const [useSecondary, setUseSecondary] = useState(false);
   const [videoDataUrl, setVideoDataUrl] = useState<string | null>(null);
   const [videoName, setVideoName] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const selectedCampaign = useMemo(
-    () => campaigns.find((c) => c.id === campaignId) ?? campaigns[0],
-    [campaigns, campaignId],
-  );
-  const selectedTemplate = useMemo(
-    () => templates.find((t) => t.id === templateId) ?? templates[0],
-    [templates, templateId],
-  );
-
-  // Auto-fill defaults from the picked campaign once.
-  function pickCampaign(id: string) {
-    setCampaignId(id);
-    const c = campaigns.find((x) => x.id === id);
-    if (!c) return;
-    if (!creator) setCreator(c.name);
-    if (handle === "@" || !handle)
-      setHandle(`@${c.name.toLowerCase().replace(/[^a-z0-9]+/g, "")}`);
-    if (!title) setTitle(`Inside ${c.name}`);
-    if (!pitch) setPitch(c.product);
-    setCtaAmount(c.priceUsd);
-  }
+  useEffect(() => {
+    const raw = document.cookie
+      .split(/;\s*/)
+      .find((c) => c.startsWith("whop_user="))
+      ?.slice("whop_user=".length);
+    if (raw) {
+      try {
+        const u = JSON.parse(decodeURIComponent(raw)) as {
+          name?: string;
+          handle?: string;
+        };
+        if (u.handle || u.name) {
+          setConnected(true);
+          setWhopHandle(u.handle ?? null);
+          setWhopName(u.name ?? null);
+        }
+      } catch {
+        // ignore
+      }
+    }
+    const login = new URLSearchParams(window.location.search).get("login");
+    if (login === "ok") toast.success("Connected to Whop");
+    else if (login === "failed") toast.error("Login failed · state mismatch");
+    else if (login === "token") toast.error("Login failed · token exchange");
+    else if (login === "config")
+      toast.error("Login not configured · set WHOP_OAUTH_CLIENT_ID");
+  }, []);
 
   async function onVideoPicked(file: File) {
     if (file.size > 4 * 1024 * 1024) {
-      toast.error("Video over 4MB — pick a shorter clip or use a template");
+      toast.error("Video over 4MB — pick a shorter clip");
       return;
     }
     const reader = new FileReader();
@@ -69,11 +80,27 @@ export function StudioClient({
   }
 
   async function submit() {
-    if (!selectedCampaign || !selectedTemplate) return;
     if (!title || !pitch) {
       toast.error("Title and pitch required");
       return;
     }
+    if (!primary.label || !primary.url) {
+      toast.error("Primary CTA needs a label and a whop.com URL");
+      return;
+    }
+    if (!isWhopUrl(primary.url)) {
+      toast.error("CTA must link to whop.com");
+      return;
+    }
+    if (useSecondary && (!secondary.label || !secondary.url)) {
+      toast.error("Second CTA needs label + URL — or turn it off");
+      return;
+    }
+    if (useSecondary && !isWhopUrl(secondary.url)) {
+      toast.error("Second CTA must link to whop.com");
+      return;
+    }
+
     setSubmitting(true);
     const t = toast.loading("Promoting to feed…");
     try {
@@ -81,19 +108,27 @@ export function StudioClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          campaignId: selectedCampaign.id,
-          creator: creator || selectedCampaign.name,
-          handle: handle || `@${selectedCampaign.id}`,
+          creator: whopName ?? "Whop creator",
+          handle: whopHandle ?? "@whop-user",
           title,
           pitch,
-          posterUrl: selectedTemplate.posterUrl,
           videoUrl: videoDataUrl ?? undefined,
-          priceUsd: selectedCampaign.priceUsd,
-          ctaKind,
-          ctaAmount,
+          ctas: useSecondary ? [primary, secondary] : [primary],
         }),
       });
-      if (!res.ok) throw new Error("Promote failed");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Promote failed");
+      // Persist locally too — the server keeps userPromoted in-memory and a
+      // redeploy / cold start wipes it. localStorage means julie's promo
+      // survives across reloads and deploys for the demo.
+      try {
+        const KEY = "whop_scroll_promoted_v1";
+        const existing = JSON.parse(localStorage.getItem(KEY) ?? "[]") as unknown[];
+        const next = [data.item, ...existing].slice(0, 12);
+        localStorage.setItem(KEY, JSON.stringify(next));
+      } catch {
+        // ignore quota / private mode failures
+      }
       toast.success("Live in feed", { id: t });
       setTimeout(() => router.push("/"), 400);
     } catch (e) {
@@ -102,117 +137,51 @@ export function StudioClient({
     }
   }
 
+  const primaryUrlValid = !primary.url || isWhopUrl(primary.url);
+  const secondaryUrlValid = !secondary.url || isWhopUrl(secondary.url);
+
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="mx-auto max-w-2xl px-5 pb-32 pt-6">
-        <header className="space-y-3 pb-6">
-          <div className="flex items-center justify-between">
-            <div className="text-[10px] uppercase tracking-[0.18em] text-white/40">
-              whop scroll · studio
-            </div>
-            <Link
-              href="/"
-              className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] text-white/80 hover:bg-white/10"
+      <div className="mx-auto max-w-xl px-5 pb-32 pt-6">
+        <header className="flex items-center justify-between pb-8">
+          <Link
+            href="/"
+            className="text-[11px] uppercase tracking-[0.18em] text-white/40 hover:text-white/70"
+          >
+            ← feed
+          </Link>
+          {connected ? (
+            <span className="rounded-full border border-[#c1fa81]/40 bg-[#c1fa81]/15 px-3 py-1.5 text-[12px] font-semibold text-[#c1fa81]">
+              ✓ {whopHandle ?? "Connected"}
+            </span>
+          ) : (
+            <a
+              href="/api/oauth/start"
+              className="rounded-full bg-[#c1fa81] px-3 py-1.5 text-[12px] font-bold text-black hover:bg-[#d2fc94]"
             >
-              ← Feed
-            </Link>
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-2xl font-bold">Promote a campaign</h1>
-            <button
-              type="button"
-              onClick={() => {
-                setConnected(true);
-                toast.success("Connected · loaded 3 campaigns");
-              }}
-              className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition ${
-                connected
-                  ? "border border-[#c1fa81]/40 bg-[#c1fa81]/15 text-[#c1fa81]"
-                  : "bg-white text-black hover:bg-white/85"
-              }`}
-            >
-              {connected ? "✓ @prophub" : "Whop login"}
-            </button>
-          </div>
+              Login with Whop
+            </a>
+          )}
         </header>
 
-        <section className="space-y-2 pb-6">
-          <label className="text-[11px] uppercase tracking-wider text-white/50">
-            1 · Your campaign
-          </label>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-            {campaigns.map((c) => {
-              const active = campaignId === c.id;
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => pickCampaign(c.id)}
-                  className={`rounded-2xl border p-3 text-left transition ${
-                    active
-                      ? "border-[#c1fa81] bg-[#c1fa81]/10"
-                      : "border-white/10 bg-white/[0.03] hover:border-white/30"
-                  }`}
-                >
-                  <div className="text-xl">{c.emoji}</div>
-                  <div className="mt-1 text-sm font-semibold">{c.name}</div>
-                  <div className="text-[11px] text-white/55">{c.product}</div>
-                  <div className="mt-2 flex items-center justify-between text-[10px] uppercase tracking-wider text-white/40">
-                    <span>${c.priceUsd}/mo</span>
-                    <span>{c.members.toLocaleString()} members</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        <h1 className="pb-1 text-3xl font-bold leading-tight">
+          Promote on the feed
+        </h1>
+        <p className="pb-8 text-sm text-white/55">
+          Drop a clip, write the hook, link your Whop. Live in seconds.
+        </p>
 
-        <section className="space-y-2 pb-6">
-          <div className="flex items-baseline justify-between">
-            <label className="text-[11px] uppercase tracking-wider text-white/50">
-              2 · Asset
-            </label>
-            <span className="text-[10px] text-white/40">
-              upload a vertical clip or pick a default template
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {templates.map((t) => {
-              const active = templateId === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => {
-                    setTemplateId(t.id);
-                    setVideoDataUrl(null);
-                    setVideoName(null);
-                  }}
-                  className={`group relative aspect-[9/16] overflow-hidden rounded-xl border ${
-                    active && !videoDataUrl
-                      ? "border-[#c1fa81]"
-                      : "border-white/10 hover:border-white/40"
-                  }`}
-                >
-                  <Image
-                    src={t.posterUrl}
-                    alt={t.label}
-                    fill
-                    sizes="120px"
-                    className="object-cover"
-                    unoptimized
-                  />
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-2 text-left">
-                    <div className="text-[11px] font-semibold">{t.label}</div>
-                    <div className="text-[9px] text-white/60">{t.vibe}</div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="flex items-center gap-2 pt-2">
+        <section className="space-y-5">
+          <div>
+            <UploadDrop
+              videoName={videoName}
+              videoDataUrl={videoDataUrl}
+              onPick={() => fileInputRef.current?.click()}
+              onClear={() => {
+                setVideoDataUrl(null);
+                setVideoName(null);
+              }}
+            />
             <input
               ref={fileInputRef}
               type="file"
@@ -223,109 +192,169 @@ export function StudioClient({
                 if (f) onVideoPicked(f);
               }}
             />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-[12px] hover:bg-white/10"
-            >
-              {videoDataUrl ? "Replace video" : "Upload vertical video"}
-            </button>
-            {videoName && (
-              <span className="truncate text-[11px] text-[#c1fa81]">
-                ✓ {videoName}
-              </span>
-            )}
-            <span className="ml-auto text-[10px] text-white/40">≤ 4MB</span>
           </div>
-        </section>
 
-        <section className="space-y-3 pb-6">
-          <label className="text-[11px] uppercase tracking-wider text-white/50">
-            3 · Pitch
-          </label>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Field
-              label="Creator name"
-              value={creator}
-              onChange={setCreator}
-              placeholder="Maya · AI fitness"
-            />
-            <Field
-              label="Handle"
-              value={handle}
-              onChange={setHandle}
-              placeholder="@mayalifts"
-            />
-          </div>
           <Field
-            label="Title (hook)"
+            label="Hook"
             value={title}
             onChange={setTitle}
-            placeholder="AI cuts 40hr/wk for a creator"
+            placeholder="17 and $1.14M/mo — App Store receipts"
           />
           <Field
-            label="Pitch (1-2 sentences)"
+            label="Pitch"
             value={pitch}
             onChange={setPitch}
             multiline
-            placeholder="30s pitch. Subscribe for the full toolkit."
+            placeholder="One or two lines on why someone should tap."
           />
-        </section>
 
-        <section className="space-y-3 pb-8">
-          <label className="text-[11px] uppercase tracking-wider text-white/50">
-            4 · Wallet CTA
-          </label>
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={ctaKind}
-              onChange={(e) => setCtaKind(e.target.value as CtaKind)}
-              className="rounded-full border border-white/15 bg-white/5 px-3 py-2 text-sm"
-            >
-              <option value="subscribe">Subscribe</option>
-              <option value="tip">Tip</option>
-            </select>
-            <span className="text-white/40">·</span>
-            <input
-              type="number"
-              value={ctaAmount}
-              min={1}
-              onChange={(e) => setCtaAmount(Number(e.target.value))}
-              className="w-24 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-sm"
+          <div className="space-y-2 pt-2">
+            <div className="text-[11px] uppercase tracking-wider text-white/50">
+              CTA
+            </div>
+            <CtaRow
+              cta={primary}
+              urlValid={primaryUrlValid}
+              onChange={setPrimary}
+              labelPlaceholder="Join Streamer Clips"
+              urlPlaceholder="https://whop.com/streamer-clips/"
             />
-            <span className="text-sm text-white/60">USDC</span>
-            <span className="ml-auto text-[10px] text-white/40">
-              Settles via Whop API · falls back to demo
-            </span>
+            {useSecondary ? (
+              <>
+                <CtaRow
+                  cta={secondary}
+                  urlValid={secondaryUrlValid}
+                  onChange={setSecondary}
+                  labelPlaceholder="Tip $1"
+                  urlPlaceholder="https://whop.com/your-tip-page/"
+                />
+                <button
+                  type="button"
+                  onClick={() => setUseSecondary(false)}
+                  className="text-[11px] text-white/40 hover:text-white/70"
+                >
+                  × remove second CTA
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setUseSecondary(true)}
+                className="text-[11px] text-white/55 hover:text-white"
+              >
+                + add a second CTA
+              </button>
+            )}
+            <p className="pt-1 text-[10px] text-white/35">
+              Links must be on whop.com — we&apos;ll reject anything else.
+            </p>
           </div>
         </section>
 
-        <div className="sticky bottom-3 z-20 flex items-center gap-2 rounded-2xl border border-white/10 bg-black/85 p-2.5 backdrop-blur">
-          <PreviewBadge
-            posterUrl={
-              videoDataUrl ? "" : selectedTemplate?.posterUrl ?? ""
-            }
-            video={videoDataUrl}
-            kind={videoDataUrl ? "custom" : "template"}
-          />
-          <div className="flex-1 text-xs text-white/70">
+        <div className="sticky bottom-3 z-20 mt-10 flex items-center gap-3 rounded-2xl border border-white/10 bg-black/85 p-3 backdrop-blur">
+          <div className="flex-1 truncate text-xs text-white/70">
             <div className="font-semibold text-white">
-              {title || "Your title here"}
+              {title || "Your hook here"}
             </div>
             <div className="truncate">
-              {creator || "Creator"} · ${ctaAmount}/{ctaKind === "subscribe" ? "mo" : "tip"}
+              {(whopName ?? "Whop creator")} ·{" "}
+              {primary.label || "Primary CTA"}
             </div>
           </div>
           <button
             type="button"
             disabled={submitting}
             onClick={submit}
-            className="rounded-full bg-[#c1fa81] px-4 py-2 text-sm font-bold text-black hover:bg-[#d8fea3] disabled:opacity-50"
+            className="rounded-full bg-[#c1fa81] px-5 py-2.5 text-sm font-bold text-black transition hover:bg-[#d8fea3] active:scale-[0.98] disabled:opacity-50"
           >
             {submitting ? "Promoting…" : "Promote → Feed"}
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function UploadDrop({
+  videoName,
+  videoDataUrl,
+  onPick,
+  onClear,
+}: {
+  videoName: string | null;
+  videoDataUrl: string | null;
+  onPick: () => void;
+  onClear: () => void;
+}) {
+  if (videoDataUrl) {
+    return (
+      <div className="flex items-center gap-3 rounded-2xl border border-[#c1fa81]/40 bg-[#c1fa81]/[0.06] p-3">
+        <video
+          src={videoDataUrl}
+          muted
+          playsInline
+          className="h-16 w-10 rounded-md object-cover"
+        />
+        <div className="min-w-0 flex-1 text-[12px]">
+          <div className="truncate font-semibold text-[#c1fa81]">
+            ✓ {videoName}
+          </div>
+          <div className="text-white/40">Will autoplay in the feed</div>
+        </div>
+        <button
+          type="button"
+          onClick={onClear}
+          className="rounded-full border border-white/15 px-2.5 py-1 text-[11px] text-white/70 hover:bg-white/10"
+        >
+          replace
+        </button>
+      </div>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={onPick}
+      className="grid w-full place-items-center rounded-2xl border-2 border-dashed border-white/15 bg-white/[0.03] py-10 text-center hover:border-white/40"
+    >
+      <div className="text-3xl">⬆️</div>
+      <div className="pt-2 text-sm font-semibold">Drop a vertical clip</div>
+      <div className="text-[11px] text-white/40">9:16, ≤ 4MB · optional</div>
+    </button>
+  );
+}
+
+function CtaRow({
+  cta,
+  urlValid,
+  onChange,
+  labelPlaceholder,
+  urlPlaceholder,
+}: {
+  cta: CtaInput;
+  urlValid: boolean;
+  onChange: (v: CtaInput) => void;
+  labelPlaceholder: string;
+  urlPlaceholder: string;
+}) {
+  return (
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_2fr]">
+      <input
+        value={cta.label}
+        onChange={(e) => onChange({ ...cta, label: e.target.value })}
+        placeholder={labelPlaceholder}
+        className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-white/40 focus:outline-none"
+      />
+      <input
+        value={cta.url}
+        onChange={(e) => onChange({ ...cta, url: e.target.value })}
+        placeholder={urlPlaceholder}
+        className={`rounded-xl border bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none ${
+          urlValid
+            ? "border-white/15 focus:border-white/40"
+            : "border-red-400/60 focus:border-red-400"
+        }`}
+      />
     </div>
   );
 }
@@ -345,7 +374,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="block pb-1 text-[10px] uppercase tracking-wider text-white/40">
+      <span className="block pb-1 text-[11px] uppercase tracking-wider text-white/50">
         {label}
       </span>
       {multiline ? (
@@ -365,35 +394,5 @@ function Field({
         />
       )}
     </label>
-  );
-}
-
-function PreviewBadge({
-  posterUrl,
-  video,
-  kind,
-}: {
-  posterUrl: string;
-  video: string | null;
-  kind: "template" | "custom";
-}) {
-  return (
-    <div className="relative h-14 w-9 overflow-hidden rounded-lg border border-white/15 bg-black">
-      {video ? (
-        <video src={video} muted playsInline className="h-full w-full object-cover" />
-      ) : posterUrl ? (
-        <Image
-          src={posterUrl}
-          alt="preview"
-          fill
-          sizes="36px"
-          className="object-cover"
-          unoptimized
-        />
-      ) : null}
-      <span className="absolute bottom-0 left-0 right-0 bg-black/70 text-center text-[7px] uppercase tracking-wider text-white/80">
-        {kind}
-      </span>
-    </div>
   );
 }

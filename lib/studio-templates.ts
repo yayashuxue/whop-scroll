@@ -36,6 +36,50 @@ export const MY_CAMPAIGNS: MyCampaign[] = [
   },
 ];
 
+// Composable creative types, ordered by the 80/20 default: creator/offering-
+// authored creative leads, generic brand polish trails.
+export type CreativeTypeOption = {
+  id: "app_demo" | "community_intro" | "creator_video" | "proof_results" | "static_ad";
+  title: string;
+  subtitle: string;
+  emoji: string;
+  badge?: string;
+};
+
+export const CREATIVE_TYPES: CreativeTypeOption[] = [
+  {
+    id: "app_demo",
+    title: "App demo",
+    subtitle: "live mini-product surface · auto-generated",
+    emoji: "📱",
+    badge: "default",
+  },
+  {
+    id: "community_intro",
+    title: "Community intro",
+    subtitle: "chat preview · member count · CTA to join",
+    emoji: "💬",
+  },
+  {
+    id: "creator_video",
+    title: "Creator pitch video",
+    subtitle: "30–60s vertical clip · creator-uploaded",
+    emoji: "🎬",
+  },
+  {
+    id: "proof_results",
+    title: "Proof / results",
+    subtitle: "screenshots · numbers · testimonials",
+    emoji: "📊",
+  },
+  {
+    id: "static_ad",
+    title: "Static brand ad",
+    subtitle: "polished poster · campaign-style · last resort",
+    emoji: "🖼️",
+  },
+];
+
 // Default vertical poster templates the creator can pick when they don't
 // have their own video ready. Each template has a vibe + Ken Burns animation.
 export type PosterTemplate = {
