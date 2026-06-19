@@ -93,7 +93,7 @@ export function Feed() {
 
   if (!feed) {
     return (
-      <div className="flex h-dvh items-center justify-center bg-black text-white/70">
+      <div className="flex h-screen items-center justify-center bg-black text-white/70">
         loading whop scroll…
       </div>
     );
@@ -101,7 +101,7 @@ export function Feed() {
 
   return (
     <div
-      className="relative mx-auto h-dvh max-w-md overflow-hidden bg-black"
+      className="relative mx-auto h-screen max-w-md overflow-hidden bg-black"
       onWheel={onWheel}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
