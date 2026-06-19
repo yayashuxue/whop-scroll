@@ -40,7 +40,22 @@ export type FeedItem = {
   // Clicking "Open on Whop" or any subscribe CTA opens this in a new tab,
   // so the demo lands inside the real Whop ecosystem.
   whopUrl?: string;
+  // Opt-in for the semi-static "instagram-style" poster path. Default is the
+  // creative-app-as-ad branch so creator content leads the feed at ~80/20.
+  useStaticPoster?: boolean;
+  // Which composable creative the card renders. Drives CreativePoster routing
+  // for user-promoted items. Seed cards keep their per-id renderer for now.
+  creativeKind?: CreativeKind;
+  // For PromotedDemoPoster: campaign stats to render inline.
+  campaignStats?: { product: string; emoji: string };
 };
+
+export type CreativeKind =
+  | "app_demo"
+  | "community_intro"
+  | "creator_video"
+  | "proof_results"
+  | "static_ad";
 
 // Curated Unsplash photos (free license) themed to each card. Each id is the
 // stable photo-{id} segment. Returns a 720x1280 vertical crop.

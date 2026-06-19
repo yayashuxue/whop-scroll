@@ -27,30 +27,6 @@ function Frame({ children }: { children: React.ReactNode }) {
   );
 }
 
-function WhopChrome({ label }: { label: string }) {
-  return (
-    <div className="absolute left-0 right-0 top-12 flex items-center justify-between px-5 text-white">
-      <div className="flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#fa4616] text-sm font-black">
-          W
-        </div>
-        <div>
-          <div className="text-[10px] uppercase tracking-[0.18em] text-white/45">
-            Whop
-          </div>
-          <div className="text-sm font-semibold">{label}</div>
-        </div>
-      </div>
-      <div className="flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-2.5 py-1">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#c1fa81]" />
-        <span className="text-[10px] uppercase tracking-wider text-white/70">
-          Live
-        </span>
-      </div>
-    </div>
-  );
-}
-
 function YieldPoster() {
   // Simulate real-time accrual: balance ticks up every 200ms.
   const [balance, setBalance] = useState(1207.42);
@@ -63,9 +39,7 @@ function YieldPoster() {
 
   return (
     <Frame>
-      <WhopChrome label="Earn" />
-
-      <div className="absolute left-1/2 top-[18%] -translate-x-1/2 text-center text-white">
+<div className="absolute left-1/2 top-[18%] -translate-x-1/2 text-center text-white">
         <div className="text-[11px] uppercase tracking-[0.2em] text-white/45">
           USDC balance
         </div>
@@ -119,8 +93,6 @@ function SwapPoster() {
 
   return (
     <Frame>
-      <WhopChrome label="Trade" />
-
       <div className="absolute left-1/2 top-[18%] w-[80%] -translate-x-1/2 space-y-2">
         <SwapRow label="You pay" amount="250.00" token="USDC" tint="white" />
         <div className="flex items-center justify-center">
@@ -169,7 +141,6 @@ function SwapPoster() {
 function DepositPoster() {
   return (
     <Frame>
-      <WhopChrome label="Deposit" />
       <div className="absolute inset-x-0 top-[22%] flex flex-col items-center text-white">
         <div className="relative h-32 w-32 overflow-hidden rounded-2xl border border-white/10 bg-white p-3">
           <div className="grid h-full w-full grid-cols-8 grid-rows-8 gap-px">

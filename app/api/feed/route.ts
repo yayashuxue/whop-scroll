@@ -2,7 +2,8 @@ import { executeFeedAction, getFeed, getWallet } from "@/lib/feed";
 import { errorResponse } from "@/lib/whop";
 
 export async function GET() {
-  return Response.json({ feed: getFeed(), wallet: getWallet() });
+  const feed = await getFeed();
+  return Response.json({ feed, wallet: getWallet() });
 }
 
 export async function POST(request: Request) {
