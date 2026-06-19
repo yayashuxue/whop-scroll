@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { FeedCard } from "./feed-card";
-import { WalletTicker } from "./wallet-ticker";
+import { TopBar } from "./top-bar";
 import type { FeedItem } from "@/lib/seed-creators";
 import type { WalletState } from "@/lib/feed";
 
@@ -82,7 +82,7 @@ export function Feed() {
       style={{ height: "100vh", width: "100%" }}
       className="relative overflow-hidden bg-black"
     >
-      <WalletTicker wallet={wallet} />
+      <TopBar wallet={wallet} />
 
       <div
         ref={scrollerRef}

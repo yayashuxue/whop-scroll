@@ -2,23 +2,15 @@
 
 import type { FeedItem } from "@/lib/seed-creators";
 
-// Per-card animated overlays that make the poster feel alive without needing
-// a real video. Each kind gets a different "vibe" — trading ticker, yield
-// counter, etc.
+// Inline "live" widgets that sit inside the bottom content column.
+// Keep these compact — they replace the old floating top-right HUD so the
+// first screen doesn't look like a debug overlay on mobile.
 
-export function LiveOverlay({ kind }: { kind: FeedItem["kind"] }) {
-  if (kind === "community") {
-    return <TradingTicker />;
-  }
-  if (kind === "whop_native") {
-    return <YieldPulse />;
-  }
-  if (kind === "product") {
-    return <SignalDots />;
-  }
-  if (kind === "creator_ad") {
-    return <RecordingDot />;
-  }
+export function InCardOverlay({ kind }: { kind: FeedItem["kind"] }) {
+  if (kind === "community") return <TradingTicker />;
+  if (kind === "whop_native") return <YieldPulse />;
+  if (kind === "product") return <SignalDots />;
+  if (kind === "creator_ad") return <RecordingDot />;
   return null;
 }
 
@@ -35,9 +27,9 @@ function TradingTicker() {
   ];
   const row = [...symbols, ...symbols];
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-16 z-[1] overflow-hidden border-y border-white/10 bg-black/30 py-2 backdrop-blur">
+    <div className="overflow-hidden rounded-lg border border-white/10 bg-black/40 py-1.5 backdrop-blur">
       <div
-        className="flex w-max gap-6 whitespace-nowrap font-mono text-[11px]"
+        className="flex w-max gap-5 whitespace-nowrap font-mono text-[10px]"
         style={{ animation: "ticker-scroll 22s linear infinite" }}
       >
         {row.map((r, i) => (
@@ -57,46 +49,43 @@ function TradingTicker() {
 
 function YieldPulse() {
   return (
-    <div className="pointer-events-none absolute right-4 top-16 z-[1] rounded-2xl border border-[#c1fa81]/40 bg-black/40 px-3 py-2 backdrop-blur">
-      <div className="text-[10px] uppercase tracking-wider text-white/60">
+    <div className="inline-flex items-center gap-2 rounded-full border border-[#c1fa81]/40 bg-black/40 px-2.5 py-1 backdrop-blur">
+      <span className="text-[9px] uppercase tracking-wider text-white/60">
         APY
-      </div>
-      <div className="flex items-baseline gap-1 font-mono text-2xl font-bold text-[#c1fa81]">
-        <span>6.08</span>
-        <span className="text-sm">%</span>
-        <span className="ml-1 inline-block h-2 w-2 animate-pulse rounded-full bg-[#c1fa81]" />
-      </div>
-      <div className="text-[10px] text-white/60">USDC · non-custodial</div>
+      </span>
+      <span className="font-mono text-sm font-bold text-[#c1fa81]">6.08%</span>
+      <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#c1fa81]" />
+      <span className="text-[9px] text-white/60">USDC</span>
     </div>
   );
 }
 
 function SignalDots() {
   return (
-    <div className="pointer-events-none absolute right-4 top-16 z-[1] flex flex-col gap-1.5 rounded-2xl border border-white/20 bg-black/40 px-3 py-2 backdrop-blur">
-      <div className="text-[10px] uppercase tracking-wider text-white/60">
-        signals · live
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="h-2 w-2 animate-pulse rounded-full bg-[#c1fa81]" />
-        <span className="font-mono text-[11px] text-white/85">BONK +24%</span>
-      </div>
-      <div className="flex items-center gap-2">
+    <div className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-black/40 px-2.5 py-1 backdrop-blur">
+      <span className="text-[9px] uppercase tracking-wider text-white/60">
+        signals
+      </span>
+      <span className="flex items-center gap-1">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#c1fa81]" />
+        <span className="font-mono text-[10px] text-white/85">BONK +24%</span>
+      </span>
+      <span className="flex items-center gap-1">
         <span
-          className="h-2 w-2 animate-pulse rounded-full bg-[#c1fa81]"
+          className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#c1fa81]"
           style={{ animationDelay: "0.4s" }}
         />
-        <span className="font-mono text-[11px] text-white/85">WIF +11%</span>
-      </div>
+        <span className="font-mono text-[10px] text-white/85">WIF +11%</span>
+      </span>
     </div>
   );
 }
 
 function RecordingDot() {
   return (
-    <div className="pointer-events-none absolute right-4 top-16 z-[1] flex items-center gap-2 rounded-full border border-white/20 bg-black/40 px-3 py-1.5 backdrop-blur">
-      <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#fa4616]" />
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-white">
+    <div className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 px-2.5 py-1 backdrop-blur">
+      <span className="h-2 w-2 animate-pulse rounded-full bg-[#fa4616]" />
+      <span className="text-[9px] font-semibold uppercase tracking-wider text-white">
         creator · live
       </span>
     </div>
