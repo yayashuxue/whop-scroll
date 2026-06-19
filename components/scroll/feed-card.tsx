@@ -19,7 +19,10 @@ export function FeedCard({
   onAction: (ctaIndex: number) => void;
 }) {
   return (
-    <div className="relative h-full w-full overflow-hidden bg-black">
+    <div
+      style={{ height: "100%", width: "100%" }}
+      className="relative overflow-hidden bg-black"
+    >
       <Image
         src={item.posterUrl}
         alt={item.title}

@@ -10,8 +10,7 @@ import type { WalletState } from "@/lib/feed";
 export function Feed() {
   const [feed, setFeed] = useState<FeedItem[] | null>(null);
   const [wallet, setWallet] = useState<WalletState | null>(null);
-  const [active, setActive] = useState(0);
-  const wheelLock = useRef(false);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     fetch("/api/feed")
@@ -46,54 +45,33 @@ export function Feed() {
     [],
   );
 
-  const move = useCallback(
-    (delta: number) => {
-      setActive((i) => {
-        if (!feed) return i;
-        const next = i + delta;
-        if (next < 0 || next >= feed.length) return i;
-        return next;
-      });
-    },
-    [feed],
-  );
+  const move = useCallback((delta: number) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollBy({ top: delta * el.clientHeight, behavior: "smooth" });
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowDown" || e.key === "PageDown" || e.key === "j") move(1);
-      if (e.key === "ArrowUp" || e.key === "PageUp" || e.key === "k") move(-1);
+      if (e.key === "ArrowDown" || e.key === "PageDown" || e.key === "j") {
+        e.preventDefault();
+        move(1);
+      }
+      if (e.key === "ArrowUp" || e.key === "PageUp" || e.key === "k") {
+        e.preventDefault();
+        move(-1);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [move]);
 
-  const onWheel = useCallback(
-    (e: React.WheelEvent) => {
-      if (wheelLock.current) return;
-      if (Math.abs(e.deltaY) < 24) return;
-      wheelLock.current = true;
-      move(e.deltaY > 0 ? 1 : -1);
-      setTimeout(() => {
-        wheelLock.current = false;
-      }, 350);
-    },
-    [move],
-  );
-
-  const touchY = useRef<number | null>(null);
-  const onTouchStart = (e: React.TouchEvent) => {
-    touchY.current = e.touches[0].clientY;
-  };
-  const onTouchEnd = (e: React.TouchEvent) => {
-    if (touchY.current == null) return;
-    const dy = e.changedTouches[0].clientY - touchY.current;
-    if (Math.abs(dy) > 50) move(dy < 0 ? 1 : -1);
-    touchY.current = null;
-  };
-
   if (!feed) {
     return (
-      <div className="flex h-screen items-center justify-center bg-black text-white/70">
+      <div
+        style={{ height: "100vh" }}
+        className="flex items-center justify-center bg-black text-zinc-400"
+      >
         loading whop scroll…
       </div>
     );
@@ -101,39 +79,37 @@ export function Feed() {
 
   return (
     <div
-      className="relative mx-auto h-screen max-w-md overflow-hidden bg-black"
-      onWheel={onWheel}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
+      style={{ height: "100vh", width: "100%" }}
+      className="relative overflow-hidden bg-black"
     >
       <WalletTicker wallet={wallet} />
 
       <div
-        className="flex h-full flex-col transition-transform duration-500 ease-out"
-        style={{ transform: `translateY(-${active * 100}%)` }}
+        ref={scrollerRef}
+        style={{
+          height: "100vh",
+          scrollSnapType: "y mandatory",
+          overflowY: "scroll",
+          scrollbarWidth: "none",
+        }}
+        className="mx-auto max-w-md [&::-webkit-scrollbar]:hidden"
       >
         {feed.map((item) => (
-          <div key={item.id} className="h-full w-full shrink-0">
-            <FeedCard
-              item={item}
-              onAction={(idx) => trigger(item, idx)}
-            />
-          </div>
+          <section
+            key={item.id}
+            style={{
+              height: "100vh",
+              scrollSnapAlign: "start",
+              scrollSnapStop: "always",
+            }}
+            className="relative"
+          >
+            <FeedCard item={item} onAction={(idx) => trigger(item, idx)} />
+          </section>
         ))}
       </div>
 
-      <div className="pointer-events-none absolute inset-y-0 right-2 z-10 flex flex-col items-center justify-center gap-1">
-        {feed.map((_, i) => (
-          <span
-            key={i}
-            className={`h-6 w-1 rounded-full transition ${
-              i === active ? "bg-white" : "bg-white/25"
-            }`}
-          />
-        ))}
-      </div>
-
-      <div className="pointer-events-none absolute inset-x-0 bottom-2 text-center text-[11px] text-white/40">
+      <div className="pointer-events-none absolute inset-x-0 bottom-3 text-center text-[11px] text-white/40">
         swipe · scroll · ↑↓
       </div>
     </div>
