@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { CtaStack } from "./cta-stack";
+import { LiveOverlay } from "./live-overlay";
 import type { FeedItem } from "@/lib/seed-creators";
 
 const KIND_LABEL: Record<FeedItem["kind"], string> = {
@@ -23,18 +24,36 @@ export function FeedCard({
       style={{ height: "100%", width: "100%" }}
       className="relative overflow-hidden bg-black"
     >
-      <Image
-        src={item.posterUrl}
-        alt={item.title}
-        fill
-        sizes="(max-width: 768px) 100vw, 480px"
-        className="object-cover opacity-90"
-        priority
-        unoptimized
-      />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-black/85" />
+      {item.videoUrl ? (
+        <video
+          className="absolute inset-0 h-full w-full object-cover opacity-95"
+          src={item.videoUrl}
+          poster={item.posterUrl}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+        />
+      ) : (
+        <div className="ken-burns absolute inset-0">
+          <Image
+            src={item.posterUrl}
+            alt={item.title}
+            fill
+            sizes="(max-width: 768px) 100vw, 480px"
+            className="object-cover opacity-90"
+            priority
+            unoptimized
+          />
+        </div>
+      )}
 
-      <div className="absolute left-4 top-4 flex items-center gap-2">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/45 via-black/10 to-black/90" />
+
+      <LiveOverlay kind={item.kind} />
+
+      <div className="fade-rise absolute left-4 top-4 flex items-center gap-2">
         <span
           className="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-black"
           style={{ background: item.tagColor }}
@@ -51,7 +70,7 @@ export function FeedCard({
         ))}
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 flex items-end gap-3 p-5 pb-8">
+      <div className="fade-rise absolute inset-x-0 bottom-0 flex items-end gap-3 p-5 pb-10">
         <div className="flex-1 space-y-3 text-white">
           <div className="flex items-center gap-3">
             <Image

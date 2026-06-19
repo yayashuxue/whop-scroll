@@ -38,11 +38,10 @@ export type FeedItem = {
   tagColor: string;
 };
 
-// Public posters via picsum.photos for stable previews (seed-based so they're
-// reproducible across reloads). Real Whop creator names/positioning so the
-// demo reads as authentic curation, not fictional.
-const poster = (seed: string) =>
-  `https://picsum.photos/seed/${encodeURIComponent(seed)}/720/1280`;
+// Curated Unsplash photos (free license) themed to each card. Each id is the
+// stable photo-{id} segment. Returns a 720x1280 vertical crop.
+const unsplash = (id: string) =>
+  `https://images.unsplash.com/photo-${id}?w=720&h=1280&fit=crop&q=80&auto=format`;
 
 const avatar = (seed: string) =>
   `https://api.dicebear.com/9.x/shapes/svg?seed=${encodeURIComponent(seed)}`;
@@ -54,7 +53,7 @@ export const SEED_FEED: FeedItem[] = [
     creator: "Prop Trading Hub",
     handle: "@prophub",
     avatar: avatar("prophub"),
-    posterUrl: poster("prop-trading"),
+    posterUrl: unsplash("1621264448270-9ef00e88a935"),
     title: "Pass any prop firm in 14 days",
     pitch:
       "Daily trade plans + live mentoring. 8,200 traders inside. We post the entries before the open.",
@@ -74,7 +73,7 @@ export const SEED_FEED: FeedItem[] = [
     creator: "Whop Wallet",
     handle: "@whop",
     avatar: avatar("whop-native"),
-    posterUrl: poster("usdc-yield"),
+    posterUrl: unsplash("1621504450181-5d356f61d307"),
     title: "Park USDC at ~6% APY",
     pitch:
       "Idle stable balance? Whop's native yield pays you while you scroll. No lockup, instant withdrawal.",
@@ -91,7 +90,7 @@ export const SEED_FEED: FeedItem[] = [
     creator: "Maya · AI fitness",
     handle: "@mayalifts",
     avatar: avatar("maya"),
-    posterUrl: poster("ai-fitness"),
+    posterUrl: unsplash("1526506118085-60ce8714f8c5"),
     title: "AI cuts 40hr/wk for a creator",
     pitch:
       "Self-made ad. 30s pitch. Subscribe for the full toolkit: prompt library + reel templates + custom GPT.",
@@ -110,7 +109,7 @@ export const SEED_FEED: FeedItem[] = [
     creator: "Solana Signals",
     handle: "@solsignals",
     avatar: avatar("solana"),
-    posterUrl: poster("solana-signals"),
+    posterUrl: unsplash("1594904351111-a072f80b1a71"),
     title: "Solana memecoin alerts, 2.3x median",
     pitch:
       "Bot-driven alerts the moment liquidity hits. 12,400 subs. Mirror the portfolio with one tap.",
@@ -130,7 +129,7 @@ export const SEED_FEED: FeedItem[] = [
     creator: "Whop Wallet",
     handle: "@whop",
     avatar: avatar("whop-swap"),
-    posterUrl: poster("cbbtc-swap"),
+    posterUrl: unsplash("1641802914005-2a9b0f3165b0"),
     title: "1-tap swap USDC → cbBTC",
     pitch:
       "Long Bitcoin without leaving Whop. Same Whop API the trading bot demo uses, settles on Base.",
@@ -147,7 +146,7 @@ export const SEED_FEED: FeedItem[] = [
     creator: "Ecom Lab",
     handle: "@ecomlab",
     avatar: avatar("ecomlab"),
-    posterUrl: poster("ecom-lab"),
+    posterUrl: unsplash("1586880244406-556ebe35f282"),
     title: "Build your first $10k store",
     pitch:
       "Weekly playbooks + supplier directory. 3,900 members. The community Whop keeps recommending.",
@@ -167,7 +166,7 @@ export const SEED_FEED: FeedItem[] = [
     creator: "ClipShop",
     handle: "@clipshop",
     avatar: avatar("clipshop"),
-    posterUrl: poster("clipshop"),
+    posterUrl: unsplash("1580707221190-bd94d9087b7f"),
     title: "Turn 1 podcast into 30 reels",
     pitch:
       "Self-made ad. Upload long-form, get 30 vertical clips with captions. Pay-per-clip or subscribe.",
