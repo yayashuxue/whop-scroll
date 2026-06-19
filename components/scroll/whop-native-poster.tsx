@@ -65,11 +65,11 @@ function YieldPoster() {
     <Frame>
       <WhopChrome label="Earn" />
 
-      <div className="absolute left-1/2 top-[28%] -translate-x-1/2 text-center text-white">
+      <div className="absolute left-1/2 top-[18%] -translate-x-1/2 text-center text-white">
         <div className="text-[11px] uppercase tracking-[0.2em] text-white/45">
           USDC balance
         </div>
-        <div className="mt-1 font-mono text-5xl font-bold tabular-nums">
+        <div className="mt-1 font-mono text-[44px] font-bold leading-none tabular-nums">
           ${balance.toFixed(4)}
         </div>
         <div className="mt-1 flex items-center justify-center gap-1.5 text-[12px] font-semibold text-[#c1fa81]">
@@ -78,7 +78,7 @@ function YieldPoster() {
         </div>
       </div>
 
-      <div className="absolute left-1/2 top-[50%] w-[78%] -translate-x-1/2">
+      <div className="absolute left-1/2 top-[36%] w-[78%] -translate-x-1/2">
         <div className="rounded-2xl border border-[#c1fa81]/30 bg-[#c1fa81]/[0.05] p-4 backdrop-blur">
           <div className="flex items-baseline justify-between">
             <span className="text-[10px] uppercase tracking-wider text-white/50">
@@ -121,7 +121,7 @@ function SwapPoster() {
     <Frame>
       <WhopChrome label="Trade" />
 
-      <div className="absolute left-1/2 top-[22%] w-[80%] -translate-x-1/2 space-y-2">
+      <div className="absolute left-1/2 top-[18%] w-[80%] -translate-x-1/2 space-y-2">
         <SwapRow label="You pay" amount="250.00" token="USDC" tint="white" />
         <div className="flex items-center justify-center">
           <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white">
@@ -136,7 +136,7 @@ function SwapPoster() {
         />
       </div>
 
-      <div className="absolute left-1/2 top-[60%] w-[80%] -translate-x-1/2 rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-white backdrop-blur">
+      <div className="absolute left-1/2 top-[44%] w-[80%] -translate-x-1/2 rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-white backdrop-blur">
         <div className="flex items-center justify-between text-[11px]">
           <span className="text-white/55">1 cbBTC</span>
           <span className="font-mono font-semibold">
@@ -170,7 +170,7 @@ function DepositPoster() {
   return (
     <Frame>
       <WhopChrome label="Deposit" />
-      <div className="absolute inset-x-0 top-[26%] flex flex-col items-center text-white">
+      <div className="absolute inset-x-0 top-[22%] flex flex-col items-center text-white">
         <div className="relative h-32 w-32 overflow-hidden rounded-2xl border border-white/10 bg-white p-3">
           <div className="grid h-full w-full grid-cols-8 grid-rows-8 gap-px">
             {Array.from({ length: 64 }).map((_, i) => {

@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { InCardOverlay } from "./live-overlay";
 import { WhopNativePoster } from "./whop-native-poster";
 import type { FeedItem } from "@/lib/seed-creators";
 
@@ -75,15 +74,9 @@ export function FeedCard({
         }`}
       />
 
-      {/* In-card live signal (ticker, signal dots, etc.) — sits just above the
-          copy block. Native cards already render their own UI, so skip it there. */}
-      {!isNative && (
-        <div className="fade-rise absolute inset-x-0 bottom-[152px] flex justify-center px-5">
-          <InCardOverlay kind={item.kind} />
-        </div>
-      )}
-
-      {/* Bottom content block: creator row + title + pitch + dual CTA */}
+      {/* Bottom content block: creator row + title + pitch + dual CTA.
+          Top half of the card is reserved for poster / native UI so they never
+          collide with this stack. */}
       <div className="fade-rise absolute inset-x-0 bottom-0 space-y-3 p-5 pb-7">
         <div className="flex items-center gap-2 text-white">
           <Image
