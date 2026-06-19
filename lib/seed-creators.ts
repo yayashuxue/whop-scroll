@@ -36,6 +36,10 @@ export type FeedItem = {
   badges: string[];
   ctas: CtaSpec[];
   tagColor: string;
+  // Real outbound to whop.com — category, company, or product page.
+  // Clicking "Open on Whop" or any subscribe CTA opens this in a new tab,
+  // so the demo lands inside the real Whop ecosystem.
+  whopUrl?: string;
 };
 
 // Curated Unsplash photos (free license) themed to each card. Each id is the
@@ -66,6 +70,7 @@ export const SEED_FEED: FeedItem[] = [
       { kind: "tip", label: "Tip $5", amountUsd: 5 },
     ],
     tagColor: "#c1fa81",
+    whopUrl: "https://whop.com/joined/trading/",
   },
   {
     id: "whop-yield",
@@ -74,15 +79,16 @@ export const SEED_FEED: FeedItem[] = [
     handle: "@whop",
     avatar: avatar("whop-native"),
     posterUrl: unsplash("1621504450181-5d356f61d307"),
-    title: "Park USDC at ~6% APY",
+    title: "Earn up to 6% APY on USDC",
     pitch:
-      "Idle stable balance? Whop's native yield pays you while you scroll. No lockup, instant withdrawal.",
-    badges: ["Whop native", "Non-custodial"],
+      "Real-time accrual, no minimum lockups, fully withdrawable. Variable yield — current rate shown in Whop.",
+    badges: ["Whop native", "Variable yield"],
     ctas: [
       { kind: "yield", label: "Deposit $100 → yield", amountUsd: 100 },
       { kind: "deposit", label: "Fund wallet", amountUsd: 500 },
     ],
     tagColor: "#fa4616",
+    whopUrl: "https://whop.com/",
   },
   {
     id: "ad-fitness-ai",
@@ -102,6 +108,7 @@ export const SEED_FEED: FeedItem[] = [
       { kind: "tip", label: "Tip $3", amountUsd: 3 },
     ],
     tagColor: "#a78bfa",
+    whopUrl: "https://whop.com/joined/content-creation/",
   },
   {
     id: "prod-signals",
@@ -122,6 +129,7 @@ export const SEED_FEED: FeedItem[] = [
       { kind: "mirror", label: "Mirror portfolio", amountUsd: 250, toToken: "SOL" },
     ],
     tagColor: "#c1fa81",
+    whopUrl: "https://whop.com/joined/trading/",
   },
   {
     id: "whop-swap-cbbtc",
@@ -130,15 +138,16 @@ export const SEED_FEED: FeedItem[] = [
     handle: "@whop",
     avatar: avatar("whop-swap"),
     posterUrl: unsplash("1641802914005-2a9b0f3165b0"),
-    title: "1-tap swap USDC → cbBTC",
+    title: "Trade crypto and stocks in Whop",
     pitch:
-      "Long Bitcoin without leaving Whop. Same Whop API the trading bot demo uses, settles on Base.",
+      "Spend from your balance. 1-tap quote → execute. Settles on Base, no off-platform wallet needed.",
     badges: ["Whop native", "Base"],
     ctas: [
       { kind: "swap", label: "Swap $50 → cbBTC", amountUsd: 50, toToken: "cbBTC" },
       { kind: "swap", label: "Swap $250 → cbBTC", amountUsd: 250, toToken: "cbBTC" },
     ],
     tagColor: "#fa4616",
+    whopUrl: "https://whop.com/",
   },
   {
     id: "comm-ecom-lab",
@@ -159,6 +168,7 @@ export const SEED_FEED: FeedItem[] = [
       { kind: "tip", label: "Tip $5", amountUsd: 5 },
     ],
     tagColor: "#c1fa81",
+    whopUrl: "https://whop.com/joined/ecommerce/",
   },
   {
     id: "ad-clip-shop",
@@ -177,5 +187,6 @@ export const SEED_FEED: FeedItem[] = [
       { kind: "tip", label: "Send $1 tip", amountUsd: 1 },
     ],
     tagColor: "#a78bfa",
+    whopUrl: "https://whop.com/joined/content-creation/",
   },
 ];
