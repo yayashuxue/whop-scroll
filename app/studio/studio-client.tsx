@@ -105,14 +105,20 @@ export function StudioClient({
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="mx-auto max-w-2xl px-5 pb-32 pt-6">
-        <header className="flex items-start justify-between gap-3 pb-6">
-          <div className="min-w-0">
+        <header className="space-y-3 pb-6">
+          <div className="flex items-center justify-between">
             <div className="text-[10px] uppercase tracking-[0.18em] text-white/40">
               whop scroll · studio
             </div>
-            <h1 className="truncate text-2xl font-bold">Promote a campaign</h1>
+            <Link
+              href="/"
+              className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] text-white/80 hover:bg-white/10"
+            >
+              ← Feed
+            </Link>
           </div>
-          <div className="flex flex-shrink-0 items-center gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 className="text-2xl font-bold">Promote a campaign</h1>
             <button
               type="button"
               onClick={() => {
@@ -125,14 +131,8 @@ export function StudioClient({
                   : "bg-white text-black hover:bg-white/85"
               }`}
             >
-              {connected ? "✓ @prophub" : "Continue with Whop"}
+              {connected ? "✓ @prophub" : "Whop login"}
             </button>
-            <Link
-              href="/"
-              className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[12px] text-white/80 hover:bg-white/10"
-            >
-              ← Feed
-            </Link>
           </div>
         </header>
 

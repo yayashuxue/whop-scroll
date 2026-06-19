@@ -112,7 +112,7 @@ export function FeedCard({
         </div>
 
         <div className="space-y-1.5 text-white">
-          <h2 className="text-[26px] font-bold leading-[1.1] tracking-tight">
+          <h2 className="line-clamp-2 text-[24px] font-bold leading-[1.1] tracking-tight">
             {item.title}
           </h2>
           <p className="line-clamp-2 text-[13px] text-white/80">{item.pitch}</p>
